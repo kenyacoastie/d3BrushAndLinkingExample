@@ -21,11 +21,11 @@
 .barChart .x.axis path {
   display: none;
 }
-#gates .x.axis text {
+#years .x.axis text {
 	text-anchor: end;
 }
 
-#gates svg {
+#years svg {
 	overflow: visible;
 }
 

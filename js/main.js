@@ -1,4 +1,4 @@
-/* global d3, crossfilter, timeSeriesChart, barChart */
+/* global d3, crossfilter, timeSeriesChart, barChart, dc */
 
 // 2015-05-01 00:43:28
 var dateFmt = d3.timeParse("%Y-%m-%d %H:%M:%S");
@@ -7,13 +7,15 @@ var chartTimeline = timeSeriesChart()
   .width(1000)
   .x(function (d) { return d.key;})
   .y(function (d) { return d.value;});
-var barChartGate = barChart()
+var barChartYear = barChart()
   .width(600)
   .x(function (d) { return d.key;})
   .y(function (d) { return d.value;});
-var barChartCar = barChart()
+var barChartBody = barChart()
   .x(function (d) { return d.key;})
   .y(function (d) { return d.value;});
+
+
 
 d3.csv("data/Lekagul_slice.csv",
   function (d) {
@@ -27,14 +29,14 @@ d3.csv("data/Lekagul_slice.csv",
     var csData = crossfilter(data);
 
     // We create dimensions for each attribute we want to filter by
-    csData.dimTime = csData.dimension(function (d) { return d.Timestamp; });
-    csData.dimCarType = csData.dimension(function (d) { return d["car-type"]; });
-    csData.dimGateName = csData.dimension(function (d) { return d["gate-name"]; });
+    csData.dimTime = csData.dimension(function (d) { return d["year"]; });
+    csData.dimBodyType = csData.dimension(function (d) { return d["body-type"]; });
+    csData.dimYear = csData.dimension(function (d) { return d["year"]; });
 
     // We bin each dimension
-    csData.timesByHour = csData.dimTime.group(d3.timeHour);
-    csData.carTypes = csData.dimCarType.group();
-    csData.gateNames = csData.dimGateName.group();
+    csData.timesByYear = csData.dimTime.group();
+    csData.bodyTypes = csData.dimBodyType.group();
+    csData.years = csData.dimYear.group();
 
 
     chartTimeline.onBrushed(function (selected) {
@@ -42,41 +44,47 @@ d3.csv("data/Lekagul_slice.csv",
       update();
     });
 
-    barChartCar.onMouseOver(function (d) {
-      csData.dimCarType.filter(d.key);
+    barChartBody.onMouseOver(function (d) {
+      csData.dimBodyType.filter(d.key);
       update();
     }).onMouseOut(function () {
       // Clear the filter
-      csData.dimCarType.filterAll();
+      csData.dimBodyType.filterAll();
       update();
     });
 
-    barChartGate.onMouseOver(function (d) {
-      csData.dimGateName.filter(d.key);
+    barChartYear.onMouseOver(function (d) {
+      csData.dimYear.filter(d.key);
       update();
     }).onMouseOut(function () {
       // Clear the filter
-      csData.dimGateName.filterAll();
+      csData.dimYear.filterAll();
       update();
     });
 
     function update() {
       d3.select("#timeline")
-        .datum(csData.timesByHour.all())
-        .call(chartTimeline);
-
-      d3.select("#carTypes")
-        .datum(csData.carTypes.all())
-        .call(barChartCar);
-
-      d3.select("#gates")
-        .datum(csData.gateNames.all())
-        .call(barChartGate)
+        .datum(csData.timesByYear.all())
+        .call(chartTimeline)
         .select(".x.axis") //Adjusting the tick labels after drawn
         .selectAll(".tick text")
         .attr("transform", "translate(-8,-1) rotate(-45)");
 
+      d3.select("#bodyTypes")
+        .datum(csData.bodyTypes.all())
+        .call(barChartBody);
+
+      d3.select("#years")
+        .datum(csData.years.all())
+        .call(barChartYear)
+        .select(".x.axis") //Adjusting the tick labels after drawn
+        .selectAll(".tick text")
+        .attr("transform", "translate(-8,-1) rotate(-45)");
+
+
     }
+
+
 
     update();
 
